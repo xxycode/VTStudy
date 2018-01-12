@@ -17,8 +17,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"Resource/curry" ofType:@"h264"];
+    NSFileHandle *fileHandler = [NSFileHandle fileHandleForReadingAtPath:filePath];
     
 }
 
