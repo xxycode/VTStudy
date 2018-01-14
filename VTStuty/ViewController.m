@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import <VideoToolbox/VideoToolbox.h>
+#import "AAPLEAGLLayer.h"
 #define LL long long
 
 @interface ViewController (){
@@ -19,8 +20,10 @@
     long mSPSSize;
     uint8_t *mPPS;
     long mPPSSize;
+    __weak IBOutlet UIImageView *imageView;
     VTDecompressionSessionRef mDecodeSession;
     CMFormatDescriptionRef  mFormatDescription;
+    AAPLEAGLLayer *playerLayer;
 }
 
 @end
@@ -30,8 +33,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    playerLayer = [[AAPLEAGLLayer alloc] initWithFrame:CGRectMake(0, 0, 320, 180)];
+    [self.view.layer addSublayer:playerLayer];
     decodeQueue = dispatch_queue_create("com.xxycode.h264decodequeue", NULL);
-    filePath = [[NSBundle mainBundle] pathForResource:@"Resource/abc" ofType:@"h264"];
+    filePath = [[NSBundle mainBundle] pathForResource:@"Resource/curry" ofType:@"h264"];
     inputStream = [[NSInputStream alloc] initWithFileAtPath:filePath];
     
     
@@ -229,6 +234,14 @@ UIImage* uiImageFromPixelBuffer(CVPixelBufferRef p) {
     return image;
 }
 
+- (void)presentBuffer:(CVImageBufferRef)imageBuffer{
+    [playerLayer setPixelBuffer:imageBuffer];
+}
+
+- (void)presentImage:(UIImage *)image{
+    [imageView setImage:image];
+}
+
 void didDecompress( void *decompressionOutputRefCon, void *sourceFrameRefCon, OSStatus status, VTDecodeInfoFlags infoFlags, CVImageBufferRef imageBuffer, CMTime presentationTimeStamp, CMTime presentationDuration ){
     //static int i = 0;
         if (imageBuffer != NULL) {
@@ -239,6 +252,13 @@ void didDecompress( void *decompressionOutputRefCon, void *sourceFrameRefCon, OS
 //            }
             
             __weak __block typeof(ViewController) *weakSelf = (__bridge ViewController *)decompressionOutputRefCon;
+            
+//            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(40 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+//                [weakSelf presentImage:uiImageFromPixelBuffer(imageBuffer)];
+//            });
+            dispatch_async(dispatch_get_main_queue(), ^{
+               [weakSelf presentBuffer:imageBuffer];
+            });
             NSNumber *framePTS = nil;
             if (CMTIME_IS_VALID(presentationTimeStamp)) {
                 framePTS = [NSNumber numberWithDouble:CMTimeGetSeconds(presentationTimeStamp)];
