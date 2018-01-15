@@ -958,20 +958,16 @@
 				DEVELOPMENT_TEAM = 38BP9ZUSA2;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/VTStuty/ffmpeg/fat-x264/include\"",
-					"\"$(SRCROOT)/VTStuty/ffmpeg/fdk-aac-ios/include/fdk-aac\"",
-					"\"$(SRCROOT)/VTStuty/ffmpeg/FFmpeg-iOS/include\"",
-					"\"$(SRCROOT)/VTStuty/ffmpeg/librtmp/include\"",
+					"\"$(SRCROOT)/ffmpeg/fat-x264/include\"",
+					"\"$(SRCROOT)/ffmpeg/fdk-aac-ios/include/fdk-aac\"",
+					"\"$(SRCROOT)/ffmpeg/FFmpeg-iOS/include\"",
+					"\"$(SRCROOT)/ffmpeg/librtmp/include\"",
 				);
 				INFOPLIST_FILE = VTStuty/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/fat-x264/lib",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/fdk-aac-ios/lib",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/FFmpeg-iOS/lib",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/librtmp/lib",
 					"$(PROJECT_DIR)/ffmpeg/fat-x264/lib",
 					"$(PROJECT_DIR)/ffmpeg/fdk-aac-ios/lib",
 					"$(PROJECT_DIR)/ffmpeg/FFmpeg-iOS/lib",
@@ -991,20 +987,16 @@
 				DEVELOPMENT_TEAM = 38BP9ZUSA2;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/VTStuty/ffmpeg/fat-x264/include\"",
-					"\"$(SRCROOT)/VTStuty/ffmpeg/fdk-aac-ios/include/fdk-aac\"",
-					"\"$(SRCROOT)/VTStuty/ffmpeg/FFmpeg-iOS/include\"",
-					"\"$(SRCROOT)/VTStuty/ffmpeg/librtmp/include\"",
+					"\"$(SRCROOT)/ffmpeg/fat-x264/include\"",
+					"\"$(SRCROOT)/ffmpeg/fdk-aac-ios/include/fdk-aac\"",
+					"\"$(SRCROOT)/ffmpeg/FFmpeg-iOS/include\"",
+					"\"$(SRCROOT)/ffmpeg/librtmp/include\"",
 				);
 				INFOPLIST_FILE = VTStuty/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/fat-x264/lib",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/fdk-aac-ios/lib",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/FFmpeg-iOS/lib",
-					"$(PROJECT_DIR)/VTStuty/ffmpeg/librtmp/lib",
 					"$(PROJECT_DIR)/ffmpeg/fat-x264/lib",
 					"$(PROJECT_DIR)/ffmpeg/fdk-aac-ios/lib",
 					"$(PROJECT_DIR)/ffmpeg/FFmpeg-iOS/lib",
