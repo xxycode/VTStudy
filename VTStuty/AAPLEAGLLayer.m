@@ -144,12 +144,12 @@ static const GLfloat kColorConversion709[] = {
      */
     CFTypeRef colorAttachments = CVBufferGetAttachment(pixelBuffer, kCVImageBufferYCbCrMatrixKey, NULL);
     
-    if (CFStringCompare(colorAttachments, kCVImageBufferYCbCrMatrix_ITU_R_601_4, 0) == kCFCompareEqualTo) {
-        _preferredConversion = kColorConversion601;
-    }
-    else {
+//    if (CFStringCompare(colorAttachments, kCVImageBufferYCbCrMatrix_ITU_R_601_4, 0) == kCFCompareEqualTo) {
+//        _preferredConversion = kColorConversion601;
+//    }
+//    else {
         _preferredConversion = kColorConversion709;
-    }
+    //}
     
     /*
      CVOpenGLESTextureCacheCreateTextureFromImage will create GLES texture optimally from CVPixelBufferRef.

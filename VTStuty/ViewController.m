@@ -13,6 +13,7 @@
 
 @interface ViewController (){
     dispatch_queue_t decodeQueue;
+    dispatch_queue_t displayQueue;
     NSInputStream *inputStream;
     NSFileHandle *inpuFileHandler;
     NSString *filePath;
@@ -20,7 +21,6 @@
     long mSPSSize;
     uint8_t *mPPS;
     long mPPSSize;
-    __weak IBOutlet UIImageView *imageView;
     VTDecompressionSessionRef mDecodeSession;
     CMFormatDescriptionRef  mFormatDescription;
     AAPLEAGLLayer *playerLayer;
@@ -32,10 +32,12 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    playerLayer = [[AAPLEAGLLayer alloc] initWithFrame:CGRectMake(0, 0, 320, 180)];
+    CGFloat width = [UIScreen mainScreen].bounds.size.width;
+    CGFloat height = width * 9 / 16;
+    playerLayer = [[AAPLEAGLLayer alloc] initWithFrame:CGRectMake(0, self.navigationController.navigationBar.frame.size.height, width, height)];
     [self.view.layer addSublayer:playerLayer];
     decodeQueue = dispatch_queue_create("com.xxycode.h264decodequeue", NULL);
+    displayQueue = dispatch_queue_create("com.xxycode.displayqueue", NULL);
     filePath = [[NSBundle mainBundle] pathForResource:@"Resource/curry" ofType:@"h264"];
     inputStream = [[NSInputStream alloc] initWithFileAtPath:filePath];
     
@@ -208,7 +210,7 @@
             
             status = VTDecompressionSessionCreate(kCFAllocatorDefault,
                                                   mFormatDescription,
-                                                  NULL, NULL,
+                                                  NULL, attrs,
                                                   &callBackRecord,
                                                   &mDecodeSession);
             CFRelease(attrs);
@@ -235,11 +237,11 @@ UIImage* uiImageFromPixelBuffer(CVPixelBufferRef p) {
 }
 
 - (void)presentBuffer:(CVImageBufferRef)imageBuffer{
-    [playerLayer setPixelBuffer:imageBuffer];
-}
-
-- (void)presentImage:(UIImage *)image{
-    [imageView setImage:image];
+    dispatch_sync(displayQueue, ^{
+        [playerLayer setPixelBuffer:imageBuffer];
+        usleep(40 * 1000);
+    });
+    
 }
 
 void didDecompress( void *decompressionOutputRefCon, void *sourceFrameRefCon, OSStatus status, VTDecodeInfoFlags infoFlags, CVImageBufferRef imageBuffer, CMTime presentationTimeStamp, CMTime presentationDuration ){
@@ -256,9 +258,7 @@ void didDecompress( void *decompressionOutputRefCon, void *sourceFrameRefCon, OS
 //            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(40 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
 //                [weakSelf presentImage:uiImageFromPixelBuffer(imageBuffer)];
 //            });
-            dispatch_async(dispatch_get_main_queue(), ^{
                [weakSelf presentBuffer:imageBuffer];
-            });
             NSNumber *framePTS = nil;
             if (CMTIME_IS_VALID(presentationTimeStamp)) {
                 framePTS = [NSNumber numberWithDouble:CMTimeGetSeconds(presentationTimeStamp)];
