@@ -26,6 +26,10 @@
     dispatch_queue_t decodeQueue;
     dispatch_queue_t displayQueue;
     AAPLEAGLLayer *playerLayer;
+    NSMutableArray *videoBuffer;
+    dispatch_semaphore_t videoSignal;
+    NSLock *lock;
+    BOOL isEnd;
 }
 
 @end
@@ -40,19 +44,23 @@
     CGFloat height = width * 9 / 16;
     playerLayer = [[AAPLEAGLLayer alloc] initWithFrame:CGRectMake(0, self.navigationController.navigationBar.frame.size.height, width, height)];
     [self.view.layer addSublayer:playerLayer];
-    
-    
+    videoBuffer = @[].mutableCopy;
+    lock = [[NSLock alloc] init];
+    videoSignal = dispatch_semaphore_create(50);
+    isEnd = NO;
 }
 
 - (void)play{
     av_register_all();
+    avformat_network_init();
     //const char *filePath = [[[NSBundle mainBundle] pathForResource:@"Resource/curry" ofType:@"h264"] UTF8String];
     //本地文件
     //const char *filePath = "/Users/xiaoxueyuan/Desktop/p.mp4";
     //rtmp直播
-    //const char *filePath = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
-    //mp4文件
-    const char *filePath = "https://f.us.sinaimg.cn/003WdJnIlx07hoToANwc01040203KRYH0k03.mp4?label=mp4_720p&template=26&Expires=1516024014&ssig=YWbnwJl8P8&KID=unistore,video";
+    const char *filePath = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
+    //hls直播
+    
+    //const char *filePath = "http://live.hkstv.hk.lxdns.com/live/hks/playlist.m3u8";
     pFormatCtx = avformat_alloc_context();
     if (avformat_open_input(&pFormatCtx, filePath, NULL, NULL) != 0) {
         printf("Couldn't open input stream.\n");
@@ -70,7 +78,6 @@
             pCodec = avcodec_find_decoder(stream->codecpar -> codec_id);
             pCodecCtx = avcodec_alloc_context3(pCodec);
             avcodec_parameters_to_context(pCodecCtx, stream -> codecpar);
-
             break;
         }
     }
@@ -82,19 +89,12 @@
         printf("Could not open codec.\n");
     }
     pFrame = av_frame_alloc();
-    
     packet = (AVPacket *)av_malloc(sizeof(AVPacket));
+    [self renderVideo];
     while(av_read_frame(pFormatCtx, packet) >= 0){
-        //int ret, got_picture;
         if(packet -> stream_index == videoindex){
-        
-//            ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
-//            if(ret < 0){
-//                printf("Decode Error.\n");
-//                //return -1;
-//            }
+            dispatch_semaphore_wait(videoSignal, DISPATCH_TIME_FOREVER);
             avcodec_send_packet(pCodecCtx, packet);
-            
             avcodec_receive_frame(pCodecCtx, pFrame);
             CVPixelBufferRef imageBuffer = converCVPixelBufferRefFromAVFrame(pFrame);
             [self presentBuffer:imageBuffer];
@@ -102,6 +102,28 @@
             av_packet_unref(packet);
         }
     }
+    isEnd = YES;
+}
+
+- (void)renderVideo{
+    dispatch_async(displayQueue, ^{
+        static int i = 0;
+        while (!isEnd) {
+            dispatch_semaphore_signal(videoSignal);
+            if ([videoBuffer count] > 0) {
+                [lock lock];
+                CVPixelBufferRef imageBuffer = (__bridge CVPixelBufferRef)([videoBuffer firstObject]);
+                [playerLayer setPixelBuffer:imageBuffer];
+                [videoBuffer removeObjectAtIndex:0];
+                [lock unlock];
+            }
+            NSTimeInterval tPS = 1.0/1000;
+            [NSThread sleepForTimeInterval:30 * tPS];
+            NSLog(@"缓冲池数量%lu",(unsigned long)[videoBuffer count]);
+            NSLog(@"播第%d帧~",i++);
+        }
+    });
+    
 }
 
  CVPixelBufferRef converCVPixelBufferRefFromAVFrame(AVFrame *avframe){
@@ -167,11 +189,12 @@
 }
 
 - (void)presentBuffer:(CVImageBufferRef)imageBuffer{
-    dispatch_sync(displayQueue, ^{
-        [playerLayer setPixelBuffer:imageBuffer];
-        usleep(40 * 1000);
-    });
-    
+    if (imageBuffer == nil) {
+        return;
+    }
+    [lock lock];
+    [videoBuffer addObject:(__bridge id _Nonnull)(imageBuffer)];
+    [lock unlock];
 }
 - (IBAction)playAction:(id)sender {
     dispatch_async(decodeQueue, ^{

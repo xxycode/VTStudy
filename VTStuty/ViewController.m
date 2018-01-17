@@ -56,11 +56,8 @@
     }
         LL fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil] objectForKey:NSFileSize] longLongValue];
         
-       // while ([inputStream hasBytesAvailable]) {
-        
         LL offset = 0;
-    
-    
+
         int count = 0;
         BOOL isEnd = NO;
         while (!isEnd) {
@@ -104,11 +101,7 @@
             offset -= 4;
             count++;
         }
-        NSLog(@"总共有%d个nalu",count);
-        
-
     
-        
     
 }
 
@@ -245,33 +238,11 @@ UIImage* uiImageFromPixelBuffer(CVPixelBufferRef p) {
 }
 
 void didDecompress( void *decompressionOutputRefCon, void *sourceFrameRefCon, OSStatus status, VTDecodeInfoFlags infoFlags, CVImageBufferRef imageBuffer, CMTime presentationTimeStamp, CMTime presentationDuration ){
-    //static int i = 0;
-        if (imageBuffer != NULL) {
-//            if (i < 5) {
-//                UIImage *img = uiImageFromPixelBuffer(imageBuffer);
-//                UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil);
-//                i++;
-//            }
-            
-            __weak __block typeof(ViewController) *weakSelf = (__bridge ViewController *)decompressionOutputRefCon;
-            
-//            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(40 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
-//                [weakSelf presentImage:uiImageFromPixelBuffer(imageBuffer)];
-//            });
-               [weakSelf presentBuffer:imageBuffer];
-            NSNumber *framePTS = nil;
-            if (CMTIME_IS_VALID(presentationTimeStamp)) {
-                framePTS = [NSNumber numberWithDouble:CMTimeGetSeconds(presentationTimeStamp)];
-            } else{
-                //NSLog(@"Not a valid time for image buffer:");
-            }
-            
-            if (framePTS) { //find the correct position for this frame in the output frames array
-               
-                NSLog(@"pts:%ld",(long)framePTS.integerValue);
-            }
+    if (imageBuffer != NULL) {
+            typeof(ViewController) *self = (__bridge ViewController *)decompressionOutputRefCon;
+            [self presentBuffer:imageBuffer];
     } else {
-        //NSLog(@"Error decompresssing frame at time: %.3f error: %d infoFlags: %u", (float)presentationTimeStamp.value/presentationTimeStamp.timescale, (int)status, (unsigned int)infoFlags);
+        NSLog(@"Error decompresssing frame at time: %.3f error: %d infoFlags: %u", (float)presentationTimeStamp.value/presentationTimeStamp.timescale, (int)status, (unsigned int)infoFlags);
     }
 }
 

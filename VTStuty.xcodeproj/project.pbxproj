@@ -958,10 +958,10 @@
 				DEVELOPMENT_TEAM = 38BP9ZUSA2;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/ffmpeg/librtmp/include\"",
+					"\"$(SRCROOT)/ffmpeg/FFmpeg-iOS/include\"",
 					"\"$(SRCROOT)/ffmpeg/fat-x264/include\"",
 					"\"$(SRCROOT)/ffmpeg/fdk-aac-ios/include/fdk-aac\"",
-					"\"$(SRCROOT)/ffmpeg/FFmpeg-iOS/include\"",
-					"\"$(SRCROOT)/ffmpeg/librtmp/include\"",
 				);
 				INFOPLIST_FILE = VTStuty/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -987,10 +987,10 @@
 				DEVELOPMENT_TEAM = 38BP9ZUSA2;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/ffmpeg/librtmp/include\"",
+					"\"$(SRCROOT)/ffmpeg/FFmpeg-iOS/include\"",
 					"\"$(SRCROOT)/ffmpeg/fat-x264/include\"",
 					"\"$(SRCROOT)/ffmpeg/fdk-aac-ios/include/fdk-aac\"",
-					"\"$(SRCROOT)/ffmpeg/FFmpeg-iOS/include\"",
-					"\"$(SRCROOT)/ffmpeg/librtmp/include\"",
 				);
 				INFOPLIST_FILE = VTStuty/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
