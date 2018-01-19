@@ -32,7 +32,6 @@
 		A972D31F200CE25500974976 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A972D312200CE25500974976 /* libssl.a */; };
 		A9A52395200B087600832E71 /* AAPLEAGLLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = A9A52394200B087600832E71 /* AAPLEAGLLayer.m */; };
 		A9DBCA2A20118CF200F9B15D /* RtmpHDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A9DBCA2920118CF200F9B15D /* RtmpHDViewController.m */; };
-		A9DBCB5020120E9900F9B15D /* d.flv in Resources */ = {isa = PBXBuildFile; fileRef = A9DBCB4E20120E4800F9B15D /* d.flv */; };
 		A9EBAD6220091EBB00F1D4D1 /* Resource in Resources */ = {isa = PBXBuildFile; fileRef = A9EBAD6120091EBB00F1D4D1 /* Resource */; };
 /* End PBXBuildFile section */
 
@@ -267,8 +266,6 @@
 		A9A52394200B087600832E71 /* AAPLEAGLLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AAPLEAGLLayer.m; sourceTree = "<group>"; };
 		A9DBCA2820118CF200F9B15D /* RtmpHDViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RtmpHDViewController.h; sourceTree = "<group>"; };
 		A9DBCA2920118CF200F9B15D /* RtmpHDViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RtmpHDViewController.m; sourceTree = "<group>"; };
-		A9DBCA2F20119D1400F9B15D /* rec.flv */ = {isa = PBXFileReference; lastKnownFileType = file; path = rec.flv; sourceTree = "<group>"; };
-		A9DBCB4E20120E4800F9B15D /* d.flv */ = {isa = PBXFileReference; lastKnownFileType = file; path = d.flv; sourceTree = "<group>"; };
 		A9EBAD6120091EBB00F1D4D1 /* Resource */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resource; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -334,8 +331,6 @@
 				A91007B92007980600A6D226 /* Main.storyboard */,
 				A91007BC2007980600A6D226 /* Assets.xcassets */,
 				A91007BE2007980600A6D226 /* LaunchScreen.storyboard */,
-				A9DBCB4E20120E4800F9B15D /* d.flv */,
-				A9DBCA2F20119D1400F9B15D /* rec.flv */,
 				A91007C12007980600A6D226 /* Info.plist */,
 				A91007C22007980600A6D226 /* main.m */,
 			);
@@ -814,7 +809,6 @@
 			files = (
 				A9EBAD6220091EBB00F1D4D1 /* Resource in Resources */,
 				A91007C02007980600A6D226 /* LaunchScreen.storyboard in Resources */,
-				A9DBCB5020120E9900F9B15D /* d.flv in Resources */,
 				A91007BD2007980600A6D226 /* Assets.xcassets in Resources */,
 				A91007BB2007980600A6D226 /* Main.storyboard in Resources */,
 			);
