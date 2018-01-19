@@ -69,12 +69,32 @@
                                             <segue destination="BYZ-38-t0r" kind="show" id="3Cn-j1-PYB"/>
                                         </connections>
                                     </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" id="DzR-Yf-XTX">
+                                        <rect key="frame" x="0.0" y="72" width="375" height="44"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="DzR-Yf-XTX" id="9gQ-ah-Ecb">
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="librtmp硬解码rtmp" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jNg-wj-U7Y">
+                                                    <rect key="frame" x="16" y="12" width="241" height="21"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <segue destination="A2P-Vj-gXc" kind="show" id="cFi-iG-k9w"/>
+                                        </connections>
+                                    </tableViewCell>
                                 </cells>
                             </tableViewSection>
                             <tableViewSection headerTitle="FFMPEG" id="nui-gq-cQI">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" id="JnI-s7-8B9">
-                                        <rect key="frame" x="0.0" y="100" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="144" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="JnI-s7-8B9" id="Rg7-km-R48">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
@@ -135,6 +155,43 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="k6m-VC-gWe" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="539" y="340"/>
+        </scene>
+        <!--RtmpHD View Controller-->
+        <scene sceneID="tsH-cs-i4G">
+            <objects>
+                <viewController id="A2P-Vj-gXc" customClass="RtmpHDViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="ruS-Ks-he2">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VtW-jd-7vd">
+                                <rect key="frame" x="171.5" y="318" width="31" height="30"/>
+                                <state key="normal" title="开始"/>
+                                <connections>
+                                    <action selector="playAction:" destination="A2P-Vj-gXc" eventType="touchUpInside" id="RnQ-Ia-AaW"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="D3L-oy-mna">
+                                <rect key="frame" x="171.5" y="356" width="31" height="30"/>
+                                <state key="normal" title="停止"/>
+                                <connections>
+                                    <action selector="stop:" destination="A2P-Vj-gXc" eventType="touchUpInside" id="7ds-2C-fLw"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="D3L-oy-mna" firstAttribute="top" secondItem="VtW-jd-7vd" secondAttribute="bottom" constant="8" id="BPh-5U-9aV"/>
+                            <constraint firstItem="VtW-jd-7vd" firstAttribute="centerX" secondItem="ruS-Ks-he2" secondAttribute="centerX" id="F38-lv-nWg"/>
+                            <constraint firstItem="D3L-oy-mna" firstAttribute="centerX" secondItem="ruS-Ks-he2" secondAttribute="centerX" id="kh6-xQ-7Gm"/>
+                            <constraint firstItem="VtW-jd-7vd" firstAttribute="centerY" secondItem="ruS-Ks-he2" secondAttribute="centerY" id="zwv-LT-VmF"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="zem-71-ADS"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="qmb-bO-W7U" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1459" y="-102"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="RoK-N5-9hS">
