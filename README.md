@@ -3,6 +3,8 @@ Learn audio&video
 First download the ffmpeg library [click here](https://pan.baidu.com/s/1eTV59gm) (password:gi3q).  
   
 #### Change Log
+##### 2018-1-19
+1. Add librtmp demo.
 ##### 2018-1-17
 1. Add VideoToolBox decode local h264 file and display by OpenGL ES.  
 2. Add FFmpeg decode local h264、mp4 and other media file and display by OpenGL ES(also support file in network and network stream, eg rtmp flv rtsp).
