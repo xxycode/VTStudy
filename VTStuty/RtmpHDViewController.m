@@ -8,8 +8,8 @@
 
 #import "RtmpHDViewController.h"
 #import "rtmp.h"
-
-#define MAX_BUFF_SIZE 1024 * 1024 * 30;
+#import <VideoToolbox/VideoToolbox.h>
+#import "AAPLEAGLLayer.h"
 
 typedef struct flvHeader{
     unsigned char type[4]; // UI8 * 3  "FLV"
@@ -37,11 +37,19 @@ typedef struct flvtag {
     int currentBuffSize;
     char *liveUrl;
     BOOL isPlaying;
+    uint8_t *mSPS;
+    long mSPSSize;
+    uint8_t *mPPS;
+    long mPPSSize;
     dispatch_queue_t readerQueue;
     dispatch_queue_t decodeQueue;
+    dispatch_queue_t displayQueue;
     RTMP *rtmp;
     NSMutableData *buffData;
     NSLock *lock;
+    VTDecompressionSessionRef mDecodeSession;
+    CMFormatDescriptionRef  mFormatDescription;
+    AAPLEAGLLayer *playerLayer;
 }
 
 @end
@@ -50,10 +58,15 @@ typedef struct flvtag {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    CGFloat width = [UIScreen mainScreen].bounds.size.width;
+    CGFloat height = width * 9 / 16;
+    playerLayer = [[AAPLEAGLLayer alloc] initWithFrame:CGRectMake(0, self.navigationController.navigationBar.frame.size.height, width, height)];
+    [self.view.layer addSublayer:playerLayer];
     lock = [[NSLock alloc] init];
     liveUrl = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
     readerQueue = dispatch_queue_create("com.xxycode.rtmp_queue", NULL);
     decodeQueue = dispatch_queue_create("com.xxycode.decode_queue", NULL);
+    displayQueue = dispatch_queue_create("com.xxycode.display_queue", NULL);
 }
 
 - (void)startReader{
@@ -106,7 +119,9 @@ typedef struct flvtag {
         if (0x09 == packet -> m_packetType) {
             [self didReceiveVideoPacket:packet];
         }else if(0x08 == packet -> m_packetType){
-            NSLog(@"收到一个音频包");
+            //NSLog(@"收到一个音频包");
+        }else if(0x12 == packet -> m_packetType){
+            [self didReceiveScriptPacket:packet];
         }
         RTMPPacket_Free(packet);
         //NSLog(@"Receive: %5dByte, Total: %5.2fkB\n",nRead,countBufSize*1.0/1024);
@@ -114,7 +129,174 @@ typedef struct flvtag {
 }
 
 - (void)didReceiveVideoPacket:(RTMPPacket *)packet{
-    NSLog(@"收到一个视频包，时间戳是：%d",packet -> m_nTimeStamp);
+    char *data = packet -> m_body;
+    int header = getIntFromBuffer(data, 1);
+    //int videoType = (header >> 4) & 0x0F;
+    int videoCodec = (header & 0x0F);
+    //printf("收到一个视频包，时间戳是：%d,帧类型是：%d,编码类型是：%d", packet -> m_nTimeStamp, videoType, videoCodec);
+    if (videoCodec == 0x07) {
+        printf("这是一个h264编码的包，");
+    
+        int type = getIntFromBuffer(data +1, 1);
+        if (type == 0) {
+            printf("是一个有sps和pps的包\n");
+            /* 1(video头) + 4(因为是avc所以多出4个字节，都是0x0) + 6(AVCDecoderConfigurationRecord前面的信息)
+             * 详见 http://akagi201.org/post/http-flv-explained/
+             */
+            data += 1 + 4 + 6;
+            mSPSSize = getIntFromBuffer(data, 2);
+            mSPS = malloc(mSPSSize);
+            //这里加2是因为SPS或者PPS的长度占2个字节
+            data += 2;
+            memcpy(mSPS, data, mSPSSize);
+            //这里加1是因为有一个字节是表示sps或者pps的数量，而这个数量一般是1个
+            data += mSPSSize + 1;
+            mPPSSize = getIntFromBuffer(data, 2);
+            mPPS = malloc(mPPSSize);
+            data += 2;
+            memcpy(mPPS, data, mPPSSize);
+            [self initVideoToolBox];
+        }else if (type == 1){
+            //printf("是一个普通的nalu包\n");
+            uint32_t data_size = packet -> m_nBodySize - 3 - 2;
+            char *frame_data = data + 3 + 2;
+            [self decodeVideoFrame:frame_data size:data_size timeStamp:packet -> m_nTimeStamp];
+            usleep(40 * 1000);
+        }
+        
+    }
+}
+
+- (void)decodeVideoFrame:(char *)data size:(uint32_t)size timeStamp:(uint32_t)timeStamp{
+    CVPixelBufferRef outputPixelBuffer = NULL;
+    if (mDecodeSession) {
+        CMBlockBufferRef blockBuffer = NULL;
+        OSStatus status  = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
+                                                              (void*)data, size,
+                                                              kCFAllocatorNull,
+                                                              NULL, 0, size,
+                                                              0, &blockBuffer);
+        CMSampleTimingInfo timingInfo = {40, timeStamp, 0};
+        
+        if(status == kCMBlockBufferNoErr) {
+            CMSampleBufferRef sampleBuffer = NULL;
+            const size_t sampleSizeArray[] = {size};
+//            status = CMSampleBufferCreateReady(kCFAllocatorDefault,
+//                                               blockBuffer,
+//                                               mFormatDescription,
+//                                               1, 0, NULL, 1, sampleSizeArray,
+//                                               &sampleBuffer);
+            status = CMSampleBufferCreate(kCFAllocatorDefault, blockBuffer, YES, NULL, NULL, mFormatDescription, 1, 1, &timingInfo, 1, sampleSizeArray, &sampleBuffer);
+            if (status == kCMBlockBufferNoErr && sampleBuffer) {
+                VTDecodeFrameFlags flags = 0;
+                VTDecodeInfoFlags flagOut = 0;
+                // 默认是同步操作。
+                // 调用didDecompress，返回后再回调
+                OSStatus decodeStatus = VTDecompressionSessionDecodeFrame(mDecodeSession,
+                                                                          sampleBuffer,
+                                                                          flags,
+                                                                          &outputPixelBuffer,
+                                                                          &flagOut);
+                
+                if(decodeStatus == kVTInvalidSessionErr) {
+                    NSLog(@"IOS8VT: Invalid session, reset decoder session");
+                } else if(decodeStatus == kVTVideoDecoderBadDataErr) {
+                    NSLog(@"IOS8VT: decode failed status=%d(Bad data)", decodeStatus);
+                } else if(decodeStatus != noErr) {
+                    NSLog(@"IOS8VT: decode failed status=%d", decodeStatus);
+                }
+                
+                CFRelease(sampleBuffer);
+            }
+            CFRelease(blockBuffer);
+        }
+    }
+    //[self presentBuffer:outputPixelBuffer];
+    [playerLayer setPixelBuffer:outputPixelBuffer];
+    CFRelease(outputPixelBuffer);
+    NSLog(@"pts:%d",timeStamp);
+    //usleep(40 * 1000);
+}
+
+- (void)didReceiveScriptPacket:(RTMPPacket *)packet{
+    printf("收到一个ScriptPacket ");
+    char *data = packet -> m_body;
+    int amf_type = getIntFromBuffer(data, 1);
+    int amf_size = getIntFromBuffer(data + 1, 2);
+    char *amf_data = malloc(amf_size);
+    memcpy(amf_data, data + 3, amf_size);
+    printf("第一个amf类型是:%x,大小是:%d,内容:%s,",amf_type,amf_size,amf_data);
+    amf_type = getIntFromBuffer(data + 3 + amf_size, 1);
+    int arr_size = getIntFromBuffer(data + 3 + amf_size + 1, 3);
+    printf("第二个amf类型是:%x,有%d个元素（貌似直播都是0个？）\n",amf_type,arr_size);
+    free(amf_data);
+}
+
+unsigned int getIntFromBuffer(char *buffer, int len)
+{
+    unsigned int value = 0;
+    for (int i = 0; i < len; i++)
+    {
+        value |= (buffer[i] & 0x000000FF) << ((len - i -1) * 8);
+    }
+    return value;
+}
+
+- (void)initVideoToolBox {
+    if (!mDecodeSession) {
+        const uint8_t* parameterSetPointers[2] = {mSPS, mPPS};
+        const size_t parameterSetSizes[2] = {mSPSSize, mPPSSize};
+        OSStatus status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
+                                                                              2, //param count
+                                                                              parameterSetPointers,
+                                                                              parameterSetSizes,
+                                                                              4, //nal start code size
+                                                                              &mFormatDescription);
+        if(status == noErr) {
+            CFDictionaryRef attrs = NULL;
+            const void *keys[] = { kCVPixelBufferPixelFormatTypeKey };
+            //      kCVPixelFormatType_420YpCbCr8Planar is YUV420
+            //      kCVPixelFormatType_420YpCbCr8BiPlanarFullRange is NV12
+            uint32_t v = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
+            const void *values[] = { CFNumberCreate(NULL, kCFNumberSInt32Type, &v) };
+            attrs = CFDictionaryCreate(NULL, keys, values, 1, NULL, NULL);
+            
+            VTDecompressionOutputCallbackRecord callBackRecord;
+            callBackRecord.decompressionOutputCallback = didDecompressFrame;
+            callBackRecord.decompressionOutputRefCon = (__bridge void *)self;
+            
+            status = VTDecompressionSessionCreate(kCFAllocatorDefault,
+                                                  mFormatDescription,
+                                                  NULL, attrs,
+                                                  &callBackRecord,
+                                                  &mDecodeSession);
+            CFRelease(attrs);
+            NSLog(@"create decompressionSession success~");
+        } else {
+            NSLog(@"IOS8VT: reset decoder session failed status=%d", status);
+        }
+        
+        
+    }
+}
+
+void didDecompressFrame( void *decompressionOutputRefCon, void *sourceFrameRefCon, OSStatus status, VTDecodeInfoFlags infoFlags, CVImageBufferRef imageBuffer, CMTime presentationTimeStamp, CMTime presentationDuration ){
+    if (imageBuffer != NULL) {
+//        typeof(RtmpHDViewController) *self = (__bridge RtmpHDViewController *)decompressionOutputRefCon;
+//        [self presentBuffer:imageBuffer];
+        CVPixelBufferRef *outputPixelBuffer = (CVPixelBufferRef *)sourceFrameRefCon;
+        *outputPixelBuffer = CVPixelBufferRetain(imageBuffer);
+//        NSLog(@"pts:%f",CMTimeGetSeconds(presentationTimeStamp));
+    } else {
+        NSLog(@"Error decompresssing frame at time: %.3f error: %d infoFlags: %u", (float)presentationTimeStamp.value/presentationTimeStamp.timescale, (int)status, (unsigned int)infoFlags);
+    }
+}
+
+- (void)presentBuffer:(CVImageBufferRef)imageBuffer{
+    dispatch_sync(displayQueue, ^{
+        [playerLayer setPixelBuffer:imageBuffer];
+        usleep(40 * 1000);
+    });
     
 }
 
@@ -255,6 +437,7 @@ typedef struct flvtag {
 }
 - (IBAction)stop:(id)sender {
     isPlaying = NO;
+    RTMP_Free(rtmp);
 }
 
 @end
