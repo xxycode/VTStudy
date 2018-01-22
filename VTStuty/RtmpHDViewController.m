@@ -238,6 +238,10 @@ typedef struct flvtag {
                 f.imageBuffer = (__bridge id)(outputPixelBuffer);
                 [lock lock];
                 [frames push:f];
+                //消除延迟累加
+                if (frames.length > 25) {
+                    [frames pop];
+                }
                 [lock unlock];
                 if(decodeStatus == kVTInvalidSessionErr) {
                     NSLog(@"IOS8VT: Invalid session, reset decoder session");
