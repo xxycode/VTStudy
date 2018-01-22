@@ -1,9 +1,9 @@
 //
-//  CKQueue.m
-//  CKDataStructureKit
+//  XYQueue.m
+//  VTStuty
 //
-//  Created by caokun on 16/11/7.
-//  Copyright © 2016年 caokun. All rights reserved.
+//  Created by XiaoXueYuan on 22/01/2018.
+//  Copyright © 2018 xxycode. All rights reserved.
 //
 
 #import "XYQueue.h"
