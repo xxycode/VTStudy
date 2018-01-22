@@ -77,26 +77,6 @@ typedef struct flvtag {
         FrameObject *f2 = obj2;
         return f1.pts > f2.pts;
     }];
-    //sortedFrames = @[].mutableCopy;
-//    XYPriorityQueue *priQueue = [[XYPriorityQueue alloc] initWithCompareBlock:^BOOL(id obj1, id obj2) {
-//        int b1 = [(NSNumber *)obj1 intValue];
-//        int b2 = [(NSNumber *)obj2 intValue];
-//        return b1 > b2 ? true : false;          // b1 > b2 返回 true 表示升序
-//    }];
-//
-//    for (int i=0; i<10; i++) {
-//        int x = arc4random() % 100;
-//        [priQueue push:@(x)];    // 加入单个对象
-//    }
-//
-//    [priQueue pushWithArray:@[@(2), @(1), @(3)]];  // 加入数组
-//
-//    NSNumber *c;
-//    while (![priQueue isEmpty]) {
-//        c = [priQueue top];    // 队头
-//        NSLog(@"pop = %@", c);
-//        [priQueue pop];      // 出队
-//    }
 }
 
 - (void)startReader{
@@ -107,16 +87,18 @@ typedef struct flvtag {
 
 - (void)startDecode{
     dispatch_async(decodeQueue, ^{
-        //[self decode];
-        int currentIndex = 0;
         while (isPlaying) {
             
-            if (frames.length > currentIndex && frames.length > 10) {
-                FrameObject *f = [frames top];//[currentIndex++];
+            [lock lock];
+            if (frames.length > 10) {
+                FrameObject *f = [frames top];
+                [frames pop];
+                [lock unlock];
                 CVImageBufferRef imgBuffer = (__bridge CVImageBufferRef)(f.imageBuffer);
                 [playerLayer setPixelBuffer:imgBuffer];
-                [frames pop];
                 NSLog(@"pts:%d",f.pts);
+            }else{
+                [lock unlock];
             }
             
             usleep(30 * 1000);
@@ -253,7 +235,9 @@ typedef struct flvtag {
                 FrameObject *f = [FrameObject new];
                 f.pts = pts;
                 f.imageBuffer = (__bridge id)(outputPixelBuffer);
+                [lock lock];
                 [frames push:f];
+                [lock unlock];
                 if(decodeStatus == kVTInvalidSessionErr) {
                     NSLog(@"IOS8VT: Invalid session, reset decoder session");
                 } else if(decodeStatus == kVTVideoDecoderBadDataErr) {

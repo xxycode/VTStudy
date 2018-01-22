@@ -12,7 +12,7 @@
 @implementation FrameObject
 - (void)dealloc{
     NSLog(@"frame dealloced");
-    CVImageBufferRef imgBuffer = (__bridge CVImageBufferRef)(self.imageBuffer);
-    CVPixelBufferRelease(imgBuffer);
+//    CVImageBufferRef imgBuffer = (__bridge CVImageBufferRef)(self.imageBuffer);
+//    CVPixelBufferRelease(imgBuffer);
 }
 @end

@@ -167,6 +167,8 @@ void destoryHeap() {
 // 删除一个节点
 - (void)removeNode:(Heap *)h index:(int)index {
     if (index > 0 && index <= h->lenth) {
+        //fix memory leak
+        CFRelease(h->base[index]);
         h->base[index] = h->base[h->lenth];
         [self downNode:h index:index];
         h->lenth--;
