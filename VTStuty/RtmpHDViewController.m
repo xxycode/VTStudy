@@ -90,18 +90,19 @@ typedef struct flvtag {
         while (isPlaying) {
             
             [lock lock];
-            if (frames.length > 10) {
+            if (frames.length > 20) {
                 FrameObject *f = [frames top];
                 [frames pop];
                 [lock unlock];
                 CVImageBufferRef imgBuffer = (__bridge CVImageBufferRef)(f.imageBuffer);
                 [playerLayer setPixelBuffer:imgBuffer];
-                NSLog(@"pts:%d",f.pts);
+                
+                NSLog(@"buffsize:%d,pts:%d",frames.length,f.pts);
             }else{
                 [lock unlock];
             }
             
-            usleep(30 * 1000);
+            usleep(40 * 1000);
         }
         
     });
@@ -193,7 +194,7 @@ typedef struct flvtag {
             int cts = getIntFromBuffer(data + 1 + 1, 3);
             //printf("cts是：%d\n",cts);
             [self decodeVideoFrame:frame_data size:data_size dts:packet -> m_nTimeStamp pts:packet -> m_nTimeStamp + cts];
-            usleep(40 * 1000);
+            //usleep(40 * 1000);
         }
         
     }
@@ -335,7 +336,7 @@ void didDecompressFrame( void *decompressionOutputRefCon, void *sourceFrameRefCo
 - (void)presentBuffer:(CVImageBufferRef)imageBuffer{
     dispatch_sync(displayQueue, ^{
         [playerLayer setPixelBuffer:imageBuffer];
-        usleep(40 * 1000);
+        //usleep(40 * 1000);
     });
     
 }
