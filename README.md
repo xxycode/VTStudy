@@ -3,7 +3,7 @@ Learn audio&video
 First download the ffmpeg library [click here](https://pan.baidu.com/s/1eTV59gm) (password:gi3q).  
   
 #### Change Log
-##### 2018-1-19
+##### 2018-1-21
 1. Add librtmp demo.
 ##### 2018-1-17
 1. Add VideoToolBox decode local h264 file and display by OpenGL ES.  
