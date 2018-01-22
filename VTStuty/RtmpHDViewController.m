@@ -10,6 +10,8 @@
 #import "rtmp.h"
 #import <VideoToolbox/VideoToolbox.h>
 #import "AAPLEAGLLayer.h"
+#import "FrameObject.h"
+#import "XYPriorityQueue.h"
 
 typedef struct flvHeader{
     unsigned char type[4]; // UI8 * 3  "FLV"
@@ -50,6 +52,9 @@ typedef struct flvtag {
     VTDecompressionSessionRef mDecodeSession;
     CMFormatDescriptionRef  mFormatDescription;
     AAPLEAGLLayer *playerLayer;
+    //优先队列 根据pts排序
+    XYPriorityQueue *frames;
+    NSMutableArray *sortedFrames;
 }
 
 @end
@@ -67,6 +72,31 @@ typedef struct flvtag {
     readerQueue = dispatch_queue_create("com.xxycode.rtmp_queue", NULL);
     decodeQueue = dispatch_queue_create("com.xxycode.decode_queue", NULL);
     displayQueue = dispatch_queue_create("com.xxycode.display_queue", NULL);
+    frames = [[XYPriorityQueue alloc] initWithCompareBlock:^BOOL(id obj1, id obj2) {
+        FrameObject *f1 = obj1;
+        FrameObject *f2 = obj2;
+        return f1.pts > f2.pts;
+    }];
+    //sortedFrames = @[].mutableCopy;
+//    XYPriorityQueue *priQueue = [[XYPriorityQueue alloc] initWithCompareBlock:^BOOL(id obj1, id obj2) {
+//        int b1 = [(NSNumber *)obj1 intValue];
+//        int b2 = [(NSNumber *)obj2 intValue];
+//        return b1 > b2 ? true : false;          // b1 > b2 返回 true 表示升序
+//    }];
+//
+//    for (int i=0; i<10; i++) {
+//        int x = arc4random() % 100;
+//        [priQueue push:@(x)];    // 加入单个对象
+//    }
+//
+//    [priQueue pushWithArray:@[@(2), @(1), @(3)]];  // 加入数组
+//
+//    NSNumber *c;
+//    while (![priQueue isEmpty]) {
+//        c = [priQueue top];    // 队头
+//        NSLog(@"pop = %@", c);
+//        [priQueue pop];      // 出队
+//    }
 }
 
 - (void)startReader{
@@ -78,6 +108,20 @@ typedef struct flvtag {
 - (void)startDecode{
     dispatch_async(decodeQueue, ^{
         //[self decode];
+        int currentIndex = 0;
+        while (isPlaying) {
+            
+            if (frames.length > currentIndex && frames.length > 10) {
+                FrameObject *f = [frames top];//[currentIndex++];
+                CVImageBufferRef imgBuffer = (__bridge CVImageBufferRef)(f.imageBuffer);
+                [playerLayer setPixelBuffer:imgBuffer];
+                [frames pop];
+                NSLog(@"pts:%d",f.pts);
+            }
+            
+            usleep(30 * 1000);
+        }
+        
     });
 }
 
@@ -135,7 +179,7 @@ typedef struct flvtag {
     int videoCodec = (header & 0x0F);
     //printf("收到一个视频包，时间戳是：%d,帧类型是：%d,编码类型是：%d", packet -> m_nTimeStamp, videoType, videoCodec);
     if (videoCodec == 0x07) {
-        printf("这是一个h264编码的包，");
+        //printf("这是一个h264编码的包，");
     
         int type = getIntFromBuffer(data +1, 1);
         if (type == 0) {
@@ -158,16 +202,22 @@ typedef struct flvtag {
             [self initVideoToolBox];
         }else if (type == 1){
             //printf("是一个普通的nalu包\n");
-            uint32_t data_size = packet -> m_nBodySize - 3 - 2;
-            char *frame_data = data + 3 + 2;
-            [self decodeVideoFrame:frame_data size:data_size timeStamp:packet -> m_nTimeStamp];
+            /*
+             * 1(type 1关键帧 0普通帧)+1(固定0x01)+3(compositionTime是dts和pts之间的偏移)
+             * 详见 http://blog.csdn.net/linux_vae/article/details/78421892
+             */
+            uint32_t data_size = packet -> m_nBodySize - (1 + 1 + 3);
+            char *frame_data = data + (1 + 1 + 3);
+            int cts = getIntFromBuffer(data + 1 + 1, 3);
+            //printf("cts是：%d\n",cts);
+            [self decodeVideoFrame:frame_data size:data_size dts:packet -> m_nTimeStamp pts:packet -> m_nTimeStamp + cts];
             usleep(40 * 1000);
         }
         
     }
 }
 
-- (void)decodeVideoFrame:(char *)data size:(uint32_t)size timeStamp:(uint32_t)timeStamp{
+- (void)decodeVideoFrame:(char *)data size:(uint32_t)size dts:(uint32_t)dts pts:(uint32_t)pts{
     CVPixelBufferRef outputPixelBuffer = NULL;
     if (mDecodeSession) {
         CMBlockBufferRef blockBuffer = NULL;
@@ -176,8 +226,11 @@ typedef struct flvtag {
                                                               kCFAllocatorNull,
                                                               NULL, 0, size,
                                                               0, &blockBuffer);
-        CMSampleTimingInfo timingInfo = {40, timeStamp, 0};
-        
+        CMSampleTimingInfo timingInfo = {40, pts, dts};
+//        CMSampleTimingInfo timingInfo;
+//        timingInfo.decodeTimeStamp = CMTimeMake(1, 30000);
+//        timingInfo.presentationTimeStamp = CMTimeMake(1, 30000);
+//        timingInfo.duration = CMTimeMake(1, 30000);
         if(status == kCMBlockBufferNoErr) {
             CMSampleBufferRef sampleBuffer = NULL;
             const size_t sampleSizeArray[] = {size};
@@ -197,7 +250,10 @@ typedef struct flvtag {
                                                                           flags,
                                                                           &outputPixelBuffer,
                                                                           &flagOut);
-                
+                FrameObject *f = [FrameObject new];
+                f.pts = pts;
+                f.imageBuffer = (__bridge id)(outputPixelBuffer);
+                [frames push:f];
                 if(decodeStatus == kVTInvalidSessionErr) {
                     NSLog(@"IOS8VT: Invalid session, reset decoder session");
                 } else if(decodeStatus == kVTVideoDecoderBadDataErr) {
@@ -212,9 +268,9 @@ typedef struct flvtag {
         }
     }
     //[self presentBuffer:outputPixelBuffer];
-    [playerLayer setPixelBuffer:outputPixelBuffer];
+    //[playerLayer setPixelBuffer:outputPixelBuffer];
     CFRelease(outputPixelBuffer);
-    NSLog(@"pts:%d",timeStamp);
+    //NSLog(@"pts:%d",timeStamp);
     //usleep(40 * 1000);
 }
 
@@ -286,7 +342,7 @@ void didDecompressFrame( void *decompressionOutputRefCon, void *sourceFrameRefCo
 //        [self presentBuffer:imageBuffer];
         CVPixelBufferRef *outputPixelBuffer = (CVPixelBufferRef *)sourceFrameRefCon;
         *outputPixelBuffer = CVPixelBufferRetain(imageBuffer);
-//        NSLog(@"pts:%f",CMTimeGetSeconds(presentationTimeStamp));
+        //NSLog(@"pts:%f",CMTimeGetSeconds(presentationTimeStamp));
     } else {
         NSLog(@"Error decompresssing frame at time: %.3f error: %d infoFlags: %u", (float)presentationTimeStamp.value/presentationTimeStamp.timescale, (int)status, (unsigned int)infoFlags);
     }

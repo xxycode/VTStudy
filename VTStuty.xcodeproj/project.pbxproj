@@ -31,6 +31,9 @@
 		A972D31E200CE25500974976 /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A972D311200CE25500974976 /* librtmp.a */; };
 		A972D31F200CE25500974976 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A972D312200CE25500974976 /* libssl.a */; };
 		A9A52395200B087600832E71 /* AAPLEAGLLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = A9A52394200B087600832E71 /* AAPLEAGLLayer.m */; };
+		A9B699B62015A2F500A01B05 /* FrameObject.m in Sources */ = {isa = PBXBuildFile; fileRef = A9B699B52015A2F500A01B05 /* FrameObject.m */; };
+		A9B699BB2015A3A600A01B05 /* XYPriorityQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = A9B699B82015A3A600A01B05 /* XYPriorityQueue.m */; };
+		A9B699BC2015A3A600A01B05 /* XYQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = A9B699B92015A3A600A01B05 /* XYQueue.m */; };
 		A9DBCA2A20118CF200F9B15D /* RtmpHDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A9DBCA2920118CF200F9B15D /* RtmpHDViewController.m */; };
 		A9EBAD6220091EBB00F1D4D1 /* Resource in Resources */ = {isa = PBXBuildFile; fileRef = A9EBAD6120091EBB00F1D4D1 /* Resource */; };
 /* End PBXBuildFile section */
@@ -264,6 +267,12 @@
 		A972D312200CE25500974976 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
 		A9A52393200B087600832E71 /* AAPLEAGLLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AAPLEAGLLayer.h; sourceTree = "<group>"; };
 		A9A52394200B087600832E71 /* AAPLEAGLLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AAPLEAGLLayer.m; sourceTree = "<group>"; };
+		A9B699B42015A2F500A01B05 /* FrameObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FrameObject.h; sourceTree = "<group>"; };
+		A9B699B52015A2F500A01B05 /* FrameObject.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FrameObject.m; sourceTree = "<group>"; };
+		A9B699B72015A3A600A01B05 /* XYPriorityQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XYPriorityQueue.h; sourceTree = "<group>"; };
+		A9B699B82015A3A600A01B05 /* XYPriorityQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XYPriorityQueue.m; sourceTree = "<group>"; };
+		A9B699B92015A3A600A01B05 /* XYQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XYQueue.m; sourceTree = "<group>"; };
+		A9B699BA2015A3A600A01B05 /* XYQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XYQueue.h; sourceTree = "<group>"; };
 		A9DBCA2820118CF200F9B15D /* RtmpHDViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RtmpHDViewController.h; sourceTree = "<group>"; };
 		A9DBCA2920118CF200F9B15D /* RtmpHDViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RtmpHDViewController.m; sourceTree = "<group>"; };
 		A9EBAD6120091EBB00F1D4D1 /* Resource */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resource; sourceTree = "<group>"; };
@@ -322,6 +331,12 @@
 				A91007B42007980600A6D226 /* AppDelegate.m */,
 				A9DBCA2820118CF200F9B15D /* RtmpHDViewController.h */,
 				A9DBCA2920118CF200F9B15D /* RtmpHDViewController.m */,
+				A9B699B42015A2F500A01B05 /* FrameObject.h */,
+				A9B699B52015A2F500A01B05 /* FrameObject.m */,
+				A9B699B72015A3A600A01B05 /* XYPriorityQueue.h */,
+				A9B699B82015A3A600A01B05 /* XYPriorityQueue.m */,
+				A9B699BA2015A3A600A01B05 /* XYQueue.h */,
+				A9B699B92015A3A600A01B05 /* XYQueue.m */,
 				A972D13C200C459300974976 /* FFViewController.h */,
 				A972D13D200C459300974976 /* FFViewController.m */,
 				A91007B62007980600A6D226 /* ViewController.h */,
@@ -825,8 +840,11 @@
 				A91007C32007980600A6D226 /* main.m in Sources */,
 				A9A52395200B087600832E71 /* AAPLEAGLLayer.m in Sources */,
 				A9DBCA2A20118CF200F9B15D /* RtmpHDViewController.m in Sources */,
+				A9B699BB2015A3A600A01B05 /* XYPriorityQueue.m in Sources */,
 				A91007B52007980600A6D226 /* AppDelegate.m in Sources */,
 				A972D13E200C459300974976 /* FFViewController.m in Sources */,
+				A9B699BC2015A3A600A01B05 /* XYQueue.m in Sources */,
+				A9B699B62015A2F500A01B05 /* FrameObject.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
