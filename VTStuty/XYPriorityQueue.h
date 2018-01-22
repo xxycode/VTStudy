@@ -15,7 +15,11 @@ typedef BOOL (^CompareBlock)(id obj1, id obj2);     // CompareBlock 返回 true 
 @property (assign, nonatomic) NSInteger length;     // 元素个数
 
 // 必须用这个函数初始化对象
-- (instancetype)initWithCompareBlock:(CompareBlock)cmp;
+- (instancetype)initWithCompareBlock:(CompareBlock)cmp NS_DESIGNATED_INITIALIZER;
+
+- (instancetype)init NS_UNAVAILABLE;
+
++ (instancetype)new NS_UNAVAILABLE;
 
 // 为了性能，以下函数设计为线程不安全的，调用者需用 GCD 自行管理
 - (void)push:(id)elem;                      // 入队
