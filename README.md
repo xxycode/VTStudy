@@ -1,6 +1,6 @@
 # VTStudy
 (实在受不了自己的英语了，改成中文文档吧)  
-这是我音视频编解码学习的一个demo，会不定期更新。  
+这是我音视频编解码学习的一个demo，会不定期更新。  
 由于GitHub限制，ffmpeg的库上传不了，所以请 [点击这里](https://pan.baidu.com/s/1eTV59gm) (提取码:gi3q)下载ffmpeg
   库，当然你也可以自己编译。下载完之后按下图把ffmpeg库复制到工程。  
 ![img](http://out3mnggr.bkt.clouddn.com/QQ20180122-160052@2x.png?v=123)  
