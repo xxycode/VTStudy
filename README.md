@@ -1,7 +1,7 @@
 # VTStudy
 Learn audio&video  
 First download the ffmpeg library [click here](https://pan.baidu.com/s/1eTV59gm) (password:gi3q), and copy the libs to the project library.
-![img](http://out3mnggr.bkt.clouddn.com/QQ20180122-160052@2x.png)  
+![img](http://out3mnggr.bkt.clouddn.com/QQ20180122-160052@2x.png?v=123)  
   
 #### Change Log
 ##### 2018-1-21
