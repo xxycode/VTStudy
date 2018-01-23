@@ -6,7 +6,7 @@
 ![img](http://out3mnggr.bkt.clouddn.com/QQ20180122-160052@2x.png?v=123)  
 #### 更新日志
 ##### 2018-1-21
-1. 新增librtm+videotoolbox来播放直播流，做了简单的消除累计延迟处理，就是粗暴的丢帧，硬解相对于软解，在cpu和内存上面都有所减少。  
+1. 新增librtmp+videotoolbox来播放直播流，做了简单的消除累计延迟处理，就是粗暴的丢帧，硬解相对于软解，在cpu和内存上面都有所减少。  
 ##### 2018-1-17
 1. 新增videotoolbox硬解码h264文件并且使用OpenGL ES来绘制画面，由于h264文件里面并没有携带pts信息所以视频是按dts显示的，会有卡顿的感觉，这里需要自己计算pts，目前还没做.
 2. 新增ffmpeg播放视频画面，支持本地文件(mp4 h264 flv)，网络文件(mp4 flv rtmp)，用的是ffmpeg的软解。  
