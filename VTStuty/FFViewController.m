@@ -75,10 +75,13 @@
         printf("Couldn't open input stream.\n");
         return;
     }
+    NSTimeInterval t4 = [[NSDate date] timeIntervalSince1970];
     if (avformat_find_stream_info(pFormatCtx, NULL) < 0) {
         printf("Couldn't find stream information.\n");
         return;
     }
+    NSTimeInterval t5 = [[NSDate date] timeIntervalSince1970];
+    printf("获取媒体信息用时:%lf\n",t5-t4);
     videoindex = -1;
     audioindex = -1;
     for (i = 0; i < pFormatCtx -> nb_streams; ++i) {
@@ -127,8 +130,8 @@
             }
             if (packet -> stream_index == audioindex) {
                 NSLog(@"音频帧");
-                avcodec_send_packet(pVideoCodecCtx, packet);
-                avcodec_receive_frame(pVideoCodecCtx, pFrame);
+                avcodec_send_packet(pAudioCodecCtx, packet);
+                avcodec_receive_frame(pAudioCodecCtx, pFrame);
                 av_packet_unref(packet);
                 av_frame_unref(pFrame);
             }
