@@ -7,7 +7,8 @@
 //
 
 #import "FFViewController.h"
-
+#import <AVFoundation/AVFoundation.h>
+#import <AudioUnit/AudioUnit.h>
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 #include "libswscale/swscale.h"
@@ -159,6 +160,31 @@
             NSLog(@"播第%d帧~",i++);
         }
     });
+    
+}
+
+- (void)initAutioSetting{
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    [audioSession setPreferredIOBufferDuration:0.002 error:nil];
+    [audioSession setPreferredSampleRate:44100.0 error:nil];
+    [audioSession setActive:YES error:nil];
+    AudioComponentDescription ioUnitDescription;
+    ioUnitDescription.componentType = kAudioUnitType_Output;
+    ioUnitDescription.componentSubType = kAudioUnitSubType_RemoteIO;
+    ioUnitDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
+    ioUnitDescription.componentFlags = 0;
+    ioUnitDescription.componentFlagsMask = 0;
+    
+    AUGraph processingGraph;
+    NewAUGraph(&processingGraph);
+    
+    AUNode ioNode;
+    AUGraphAddNode(processingGraph, &ioUnitDescription, &ioNode);
+    
+    AUGraphOpen(processingGraph);
+    AudioUnit ioUnit;
+    AUGraphNodeInfo(processingGraph, ioNode, NULL, &ioUnit);
+    
     
 }
 
