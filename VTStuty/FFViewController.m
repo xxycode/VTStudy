@@ -240,6 +240,10 @@
         CVPixelBufferRelease(imgBuffer);
     }
 }
+
+- (void)didReceiveAudioBuffer:(id)audioBuffer{
+    
+}
 - (IBAction)playAction:(id)sender {
     dispatch_async(decodeQueue, ^{
         [self play];
