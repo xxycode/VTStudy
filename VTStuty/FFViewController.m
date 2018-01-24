@@ -17,17 +17,18 @@
 @interface FFViewController (){
     //FFmpeg
     AVFormatContext *pFormatCtx;
-    int             i, videoindex;
-    AVCodecContext  *pCodecCtx;
-    AVCodec         *pCodec;
+    int             i, videoindex, audioindex;
+    AVCodecContext  *pVideoCodecCtx,*pAudioCodecCtx;
+    AVCodec         *pVideoCodec,*pAudioCodec;
     AVFrame *pFrame,*pFrameYUV;
     AVCodecParameters *codecParams;
     AVPacket *packet;
+    NSTimeInterval fps;
     dispatch_queue_t decodeQueue;
     dispatch_queue_t displayQueue;
     AAPLEAGLLayer *playerLayer;
     NSMutableArray *videoBuffer;
-    dispatch_semaphore_t videoSignal;
+    NSMutableArray *audioBuffer;
     NSLock *lock;
     BOOL isEnd;
 }
@@ -42,17 +43,24 @@
     displayQueue = dispatch_queue_create("com.xxycode.displayqueue", NULL);
     CGFloat width = [UIScreen mainScreen].bounds.size.width;
     CGFloat height = width * 9 / 16;
-    playerLayer = [[AAPLEAGLLayer alloc] initWithFrame:CGRectMake(0, self.navigationController.navigationBar.frame.size.height, width, height)];
+    playerLayer = [[AAPLEAGLLayer alloc] initWithFrame:CGRectMake(0, 64, width, height)];
     [self.view.layer addSublayer:playerLayer];
     videoBuffer = @[].mutableCopy;
+    audioBuffer = @[].mutableCopy;
     lock = [[NSLock alloc] init];
-    videoSignal = dispatch_semaphore_create(50);
     isEnd = NO;
+    fps = 23;
 }
 
 - (void)play{
+    NSTimeInterval t1 = [[NSDate date] timeIntervalSince1970];
     av_register_all();
+    NSTimeInterval t2 = [[NSDate date] timeIntervalSince1970];
+    printf("register用时:%lf\n",t2-t1);
     avformat_network_init();
+    NSTimeInterval t3 = [[NSDate date] timeIntervalSince1970];
+    printf("init net work用时:%lf\n",t3-t2);
+    //return;
     //const char *filePath = [[[NSBundle mainBundle] pathForResource:@"Resource/curry" ofType:@"h264"] UTF8String];
     //本地文件
     //const char *filePath = "/Users/xiaoxueyuan/Desktop/p.mp4";
@@ -71,54 +79,82 @@
         return;
     }
     videoindex = -1;
+    audioindex = -1;
     for (i = 0; i < pFormatCtx -> nb_streams; ++i) {
         AVStream *stream = pFormatCtx -> streams[i];
         if (stream -> codecpar -> codec_type == AVMEDIA_TYPE_VIDEO) {
+            fps = stream -> avg_frame_rate.num / stream -> avg_frame_rate.den;//每秒多少帧
             videoindex = i;
-            pCodec = avcodec_find_decoder(stream->codecpar -> codec_id);
-            pCodecCtx = avcodec_alloc_context3(pCodec);
-            avcodec_parameters_to_context(pCodecCtx, stream -> codecpar);
-            break;
+            pVideoCodec = avcodec_find_decoder(stream -> codecpar -> codec_id);
+            pVideoCodecCtx = avcodec_alloc_context3(pVideoCodec);
+            avcodec_parameters_to_context(pVideoCodecCtx, stream -> codecpar);
+        }
+        if (stream -> codecpar -> codec_type == AVMEDIA_TYPE_AUDIO) {
+            audioindex = i;
+            pAudioCodec = avcodec_find_decoder(stream -> codecpar -> codec_id);
+            pAudioCodecCtx = avcodec_alloc_context3(pAudioCodec);
+            avcodec_parameters_to_context(pAudioCodecCtx, stream -> codecpar);
         }
     }
     if (videoindex == -1) {
         printf("Didn't find a video stream.\n");
         return;
     }
-    if(avcodec_open2(pCodecCtx, pCodec,NULL) < 0){
-        printf("Could not open codec.\n");
+    if (audioindex == -1) {
+        printf("Didn't find a audio stream.\n");
+        return;
+    }
+    if(avcodec_open2(pVideoCodecCtx, pVideoCodec,NULL) < 0){
+        printf("Could not open audio codec.\n");
+    }
+    if (avcodec_open2(pAudioCodecCtx, pAudioCodec, NULL) < 0) {
+        printf("Could not open audio codec.\n");
     }
     pFrame = av_frame_alloc();
     packet = (AVPacket *)av_malloc(sizeof(AVPacket));
     [self renderVideo];
-    while(av_read_frame(pFormatCtx, packet) >= 0){
-        if(packet -> stream_index == videoindex){
-            dispatch_semaphore_wait(videoSignal, DISPATCH_TIME_FOREVER);
-            avcodec_send_packet(pCodecCtx, packet);
-            avcodec_receive_frame(pCodecCtx, pFrame);
-            CVPixelBufferRef imageBuffer = converCVPixelBufferRefFromAVFrame(pFrame);
-            [self presentBuffer:imageBuffer];
-            CVBufferRelease(imageBuffer);
-            av_packet_unref(packet);
+    while(!isEnd){
+        if (videoBuffer.count < 30 && audioBuffer.count < 80) {
+            av_read_frame(pFormatCtx, packet);
+            if(packet -> stream_index == videoindex){
+                avcodec_send_packet(pVideoCodecCtx, packet);
+                avcodec_receive_frame(pVideoCodecCtx, pFrame);
+                CVPixelBufferRef imageBuffer = converCVPixelBufferRefFromAVFrame(pFrame);
+                [self didReceiveVideoBuffer:imageBuffer];
+                av_packet_unref(packet);
+                av_frame_unref(pFrame);
+            }
+            if (packet -> stream_index == audioindex) {
+                NSLog(@"音频帧");
+                avcodec_send_packet(pVideoCodecCtx, packet);
+                avcodec_receive_frame(pVideoCodecCtx, pFrame);
+                av_packet_unref(packet);
+                av_frame_unref(pFrame);
+            }
         }
+        
     }
     isEnd = YES;
 }
 
 - (void)renderVideo{
     dispatch_async(displayQueue, ^{
-        static int i = 0;
         while (!isEnd) {
-            dispatch_semaphore_signal(videoSignal);
+            static int  i = 0;
+            [lock lock];
             if ([videoBuffer count] > 0) {
-                [lock lock];
+                
                 CVPixelBufferRef imageBuffer = (__bridge CVPixelBufferRef)([videoBuffer firstObject]);
-                [playerLayer setPixelBuffer:imageBuffer];
                 [videoBuffer removeObjectAtIndex:0];
+                [lock unlock];
+                [playerLayer setPixelBuffer:imageBuffer];
+                CVPixelBufferRelease(imageBuffer);
+            }else{
                 [lock unlock];
             }
             NSTimeInterval tPS = 1.0/1000;
-            [NSThread sleepForTimeInterval:30 * tPS];
+            
+            [NSThread sleepForTimeInterval:(1000 / fps) * tPS];
             NSLog(@"缓冲池数量%lu",(unsigned long)[videoBuffer count]);
             NSLog(@"播第%d帧~",i++);
         }
@@ -188,13 +224,21 @@
     return outputPixelBuffer;
 }
 
-- (void)presentBuffer:(CVImageBufferRef)imageBuffer{
+- (void)didReceiveVideoBuffer:(CVImageBufferRef)imageBuffer{
     if (imageBuffer == nil) {
         return;
     }
     [lock lock];
     [videoBuffer addObject:(__bridge id _Nonnull)(imageBuffer)];
+    CVPixelBufferRef imgBuffer = NULL;
+    if (videoBuffer.count > 30) {
+        imgBuffer = (__bridge CVPixelBufferRef)videoBuffer[0];
+        [videoBuffer removeObjectAtIndex:0];
+    }
     [lock unlock];
+    if (imgBuffer) {
+        CVPixelBufferRelease(imgBuffer);
+    }
 }
 - (IBAction)playAction:(id)sender {
     dispatch_async(decodeQueue, ^{

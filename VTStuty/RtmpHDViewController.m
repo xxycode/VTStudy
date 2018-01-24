@@ -210,18 +210,9 @@ typedef struct flvtag {
                                                               NULL, 0, size,
                                                               0, &blockBuffer);
         CMSampleTimingInfo timingInfo = {40, pts, dts};
-//        CMSampleTimingInfo timingInfo;
-//        timingInfo.decodeTimeStamp = CMTimeMake(1, 30000);
-//        timingInfo.presentationTimeStamp = CMTimeMake(1, 30000);
-//        timingInfo.duration = CMTimeMake(1, 30000);
         if(status == kCMBlockBufferNoErr) {
             CMSampleBufferRef sampleBuffer = NULL;
             const size_t sampleSizeArray[] = {size};
-//            status = CMSampleBufferCreateReady(kCFAllocatorDefault,
-//                                               blockBuffer,
-//                                               mFormatDescription,
-//                                               1, 0, NULL, 1, sampleSizeArray,
-//                                               &sampleBuffer);
             status = CMSampleBufferCreate(kCFAllocatorDefault, blockBuffer, YES, NULL, NULL, mFormatDescription, 1, 1, &timingInfo, 1, sampleSizeArray, &sampleBuffer);
             if (status == kCMBlockBufferNoErr && sampleBuffer) {
                 VTDecodeFrameFlags flags = 0;
